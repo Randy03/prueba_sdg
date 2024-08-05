@@ -5,6 +5,9 @@ import sys
 
 spark = SparkSession.builder.appName("SGDApp").config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2").getOrCreate()
 
+log4jLogger = spark.sparkContext._jvm.org.apache.log4j
+LOGGER = log4jLogger.LogManager.getLogger(__name__)
+
 hdfs_host = 'hdfs://namenode:9000'
 kafka = "broker:29092"
 
@@ -15,6 +18,10 @@ except:
     pass
 
 dfs = {}
+
+LOGGER.info(f"hdfs host: {hdfs_host}")
+LOGGER.info(f"kafka broker: {kafka}")
+
 
 metadata = ''.join(spark.sparkContext.textFile(f'{hdfs_host}/data/metadata.json').collect())
 metadata = json.loads(metadata)
@@ -45,9 +52,14 @@ for dataflow in metadata['dataflows']:
     for sink in dataflow['sinks']:
         if sink['format'] == "KAFKA":
             dfs[sink["name"]] = dfs[sink["input"]].select(to_json(struct([col(c) for c in dfs[sink["input"]].columns])).alias("value"))
+            LOGGER.info("Sending to kafka ...")
+            LOGGER.info(dfs[sink["input"]].show())
             for topic in sink['topics']:
-                dfs[sink["name"]].write.format("kafka").option("kafka.bootstrap.servers", kafka).option("topic", topic).save()          
+                dfs[sink["name"]].write.format("kafka").option("kafka.bootstrap.servers", kafka).option("topic", topic).save()
+                LOGGER.info(f"Sent to topic: {topic}")
         if sink['format'] == "JSON":
+            LOGGER.info("Sending to hdfs ...")
+            LOGGER.info(dfs[sink["input"]].show())
             for path in sink["paths"]:
                 dfs[sink["input"]].coalesce(1).write.mode(sink["saveMode"].lower()).format('json').save(hdfs_host+path)
 
