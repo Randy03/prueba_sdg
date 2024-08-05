@@ -65,7 +65,7 @@ with DAG('SDG_pipeline', default_args=default_args, schedule=None,catchup=False)
 
     @task
     def upload_files_to_hdfs():
-        time.sleep(40)
+        time.sleep(30)
         hdfs = WebHDFSHook(
             webhdfs_conn_id='hdfs',
             proxy_user='root'
@@ -76,7 +76,6 @@ with DAG('SDG_pipeline', default_args=default_args, schedule=None,catchup=False)
         hdfs.load_file(input_path,dst_path)
         hdfs.load_file('/opt/airflow/dags/metadata.json','/data/metadata.json')
 
-        time.sleep(20)
 
     @task
     def download_files_from_hdfs():
