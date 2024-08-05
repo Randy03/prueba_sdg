@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  airflow:
+    image: airflowcustom
+    volumes:
+      - /home/rame/airflow/dags:/usr/local/airflow/dags
+    ports:
+      - "8090:8080"
+    command: airflow db init && airflow webserver

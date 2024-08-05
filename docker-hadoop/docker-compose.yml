@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  namenode:
+    networks:
+      - docker-network
+    image: hdfs-namenode
+    ports:
+      - "9000:9000"
+      - "2000:22"
+      - "50070:50070"
+      - "50075:50075"
+    volumes:
+      - ./data:/hadoop/data
+    environment:
+      - "HADOOP_CONF_DIR=/etc/hadoop"
+      - "USER=root"
